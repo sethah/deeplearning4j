@@ -349,7 +349,8 @@ public class ParallelWrapper implements AutoCloseable {
 
                 // if if we're using MQ here - we'd like
                 if (isMQ)
-                    Nd4j.getAffinityManager().attachThreadToDevice(zoo[cnt], cnt % Nd4j.getAffinityManager().getNumberOfDevices());
+                    Nd4j.getAffinityManager().attachThreadToDevice(zoo[cnt],
+                                    cnt % Nd4j.getAffinityManager().getNumberOfDevices());
 
                 zoo[cnt].setUncaughtExceptionHandler(handler);
                 zoo[cnt].start();
@@ -628,13 +629,13 @@ public class ParallelWrapper implements AutoCloseable {
 
             this.originalModel = model;
             //if (rootDevice != threadId) {
-                /*if (model instanceof MultiLayerNetwork) {
-                    this.replicatedModel = ((MultiLayerNetwork) model).clone();
-
-                } else if (model instanceof ComputationGraph) {
-                    this.replicatedModel = ((ComputationGraph) model).clone();
-                }
-                */
+            /*if (model instanceof MultiLayerNetwork) {
+                this.replicatedModel = ((MultiLayerNetwork) model).clone();
+            
+            } else if (model instanceof ComputationGraph) {
+                this.replicatedModel = ((ComputationGraph) model).clone();
+            }
+            */
             /*} else {
                 this.onRootModel = true;
                 this.replicatedModel = model;
@@ -714,7 +715,8 @@ public class ParallelWrapper implements AutoCloseable {
                 // however, we don't need clone or anything here
                 if (originalModel instanceof MultiLayerNetwork) {
                     if (!onRootModel) {
-                        MultiLayerConfiguration conf = MultiLayerConfiguration.fromJson(((MultiLayerNetwork) originalModel).getLayerWiseConfigurations().toJson());
+                        MultiLayerConfiguration conf = MultiLayerConfiguration.fromJson(
+                                        ((MultiLayerNetwork) originalModel).getLayerWiseConfigurations().toJson());
 
                         this.replicatedModel = new MultiLayerNetwork(conf);
 
@@ -739,7 +741,8 @@ public class ParallelWrapper implements AutoCloseable {
                     }
                 } else if (originalModel instanceof ComputationGraph) {
                     if (!onRootModel) {
-                        this.replicatedModel = new ComputationGraph(ComputationGraphConfiguration.fromJson(((ComputationGraph) originalModel).getConfiguration().toJson()));
+                        this.replicatedModel = new ComputationGraph(ComputationGraphConfiguration
+                                        .fromJson(((ComputationGraph) originalModel).getConfiguration().toJson()));
 
 
                         ((ComputationGraph) this.replicatedModel).init();

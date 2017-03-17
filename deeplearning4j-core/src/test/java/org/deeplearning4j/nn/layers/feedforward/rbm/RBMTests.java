@@ -70,13 +70,13 @@ public class RBMTests {
 
     @Test
     public void testGradientFlattening() {
-        INDArray features = Nd4j.create(new double[][] {
-                {0,0,0,0,0,0}});
-        INDArray params = Nd4j.create(new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+        INDArray features = Nd4j.create(new double[][] {{0, 0, 0, 0, 0, 0}});
+        INDArray params = Nd4j.create(
+                        new double[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
         INDArray expectedParams = params.dup();
         RBM rbm = getRBMLayer(6, 3, HiddenUnit.BINARY, VisibleUnit.BINARY, params, true, false, 1,
-                LossFunctions.LossFunction.SQUARED_LOSS, 1);
-//        INDArray expectedStepParams = Nd4j.create(new double[] {-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,0.0,0.0,0.0,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5});
+                        LossFunctions.LossFunction.SQUARED_LOSS, 1);
+        //        INDArray expectedStepParams = Nd4j.create(new double[] {-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,-0.25,0.0,0.0,0.0,-0.5,-0.5,-0.5,-0.5,-0.5,-0.5});
 
         rbm.fit(features);
         Gradient g = rbm.gradient();
@@ -345,13 +345,14 @@ public class RBMTests {
 
 
     private static RBM getRBMLayer(int nIn, int nOut, HiddenUnit hiddenUnit, VisibleUnit visibleUnit, INDArray params,
-                                   boolean pretrain, boolean initialize, int iterations, LossFunctions.LossFunction lossFunctions, int learningRate) {
+                    boolean pretrain, boolean initialize, int iterations, LossFunctions.LossFunction lossFunctions,
+                    int learningRate) {
         org.deeplearning4j.nn.conf.layers.RBM layer =
-                new org.deeplearning4j.nn.conf.layers.RBM.Builder(hiddenUnit, visibleUnit).nIn(nIn).nOut(nOut)
-                        .learningRate(learningRate).lossFunction(lossFunctions).build();
+                        new org.deeplearning4j.nn.conf.layers.RBM.Builder(hiddenUnit, visibleUnit).nIn(nIn).nOut(nOut)
+                                        .learningRate(learningRate).lossFunction(lossFunctions).build();
 
         NeuralNetConfiguration conf =
-                new NeuralNetConfiguration.Builder().iterations(iterations).seed(42).layer(layer).build();
+                        new NeuralNetConfiguration.Builder().iterations(iterations).seed(42).layer(layer).build();
         conf.setPretrain(pretrain);
 
         return (RBM) conf.getLayer().instantiate(conf, null, 0, params, initialize);
