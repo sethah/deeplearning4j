@@ -108,7 +108,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
 
     protected transient Solver solver; //Used to call optimizers during backprop
 
-    protected final static String workspaceExternal = "LOOP_ITER";
+    protected final static String workspaceExternal = "LOOP_EXTERNAL";
     protected final static String workspaceFeedForward = "LOOP_FF";
     protected final static String workspaceBackProp = "LOOP_BP";
     protected final static MemoryWorkspace dummy = new DummyWorkspace();
@@ -977,7 +977,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
         DataSetIterator iter;
         // we're wrapping all iterators into AsyncDataSetIterator to provide background prefetch - where appropriate
         if (iterator.asyncSupported()) {
-            iter = new AsyncDataSetIterator(iterator, Math.max(Nd4j.getAffinityManager().getNumberOfDevices() * 2, 4));
+            iter = new AsyncDataSetIterator(iterator, Math.max(Nd4j.getAffinityManager().getNumberOfDevices() * 2, 4), layerWiseConfigurations.getWorkspaceMode() != WorkspaceMode.NONE);
         } else {
             iter = iterator;
         }
@@ -1554,10 +1554,12 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
 
         MemoryWorkspace workspace = layerWiseConfigurations.getWorkspaceMode() == WorkspaceMode.NONE ? dummy : Nd4j.getWorkspaceManager().getWorkspaceForCurrentThread(configuration,workspaceExternal);
 
-        try (MemoryWorkspace ws = workspace.notifyScopeEntered()) {
+
             if (layerWiseConfigurations.getBackpropType() == BackpropType.TruncatedBPTT) {
-                doTruncatedBPTT(data.getFeatures(), data.getLabels(), data.getFeaturesMaskArray(),
-                        data.getLabelsMaskArray());
+                try (MemoryWorkspace ws = workspace.notifyScopeEntered()) {
+                    doTruncatedBPTT(data.getFeatures(), data.getLabels(), data.getFeaturesMaskArray(),
+                            data.getLabelsMaskArray());
+                }
             } else {
                 //Standard training
                 boolean hasMaskArrays = data.hasMaskArrays();
@@ -1567,7 +1569,6 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
                 if (hasMaskArrays)
                     clearLayerMaskArrays();
             }
-        }
     }
 
     /**
