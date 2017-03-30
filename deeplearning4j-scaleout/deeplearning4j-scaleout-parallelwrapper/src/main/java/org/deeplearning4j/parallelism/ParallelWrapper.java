@@ -762,8 +762,17 @@ public class ParallelWrapper implements AutoCloseable {
 
                             if (replicatedModel instanceof MultiLayerNetwork) {
                                 ((MultiLayerNetwork) replicatedModel).fit(dataSet);
+
+                                MultiLayerConfiguration conf = ((MultiLayerNetwork)replicatedModel).getLayerWiseConfigurations();
+                                int numUpdates = ((MultiLayerNetwork)replicatedModel).conf().getNumIterations() * averagingFrequency;
+                                conf.setIterationCount(conf.getIterationCount() + numUpdates);
+
                             } else if (replicatedModel instanceof ComputationGraph) {
                                 ((ComputationGraph) replicatedModel).fit(dataSet);
+
+                                ComputationGraphConfiguration conf = ((ComputationGraph) replicatedModel).getConfiguration();
+                                int numUpdates = ((ComputationGraph) replicatedModel).conf().getNumIterations() * averagingFrequency;
+                                conf.setIterationCount(conf.getIterationCount() + numUpdates);
                             }
 
                             if (Nd4j.getExecutioner() instanceof GridExecutioner)
@@ -779,6 +788,10 @@ public class ParallelWrapper implements AutoCloseable {
                         if (dataSet != null) {
                             if (replicatedModel instanceof ComputationGraph) {
                                 ((ComputationGraph) replicatedModel).fit(dataSet);
+
+                                ComputationGraphConfiguration conf = ((ComputationGraph) replicatedModel).getConfiguration();
+                                int numUpdates = ((ComputationGraph) replicatedModel).conf().getNumIterations() * averagingFrequency;
+                                conf.setIterationCount(conf.getIterationCount() + numUpdates);
                             } else
                                 throw new RuntimeException("MultiDataSet can be fit into ComputationGraph only");
 
