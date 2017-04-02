@@ -60,6 +60,7 @@ public class ParallelWrapper implements AutoCloseable {
     protected List<IterationListener> listeners = new ArrayList<>();
     protected StatsStorageRouter storageRouter;
     protected boolean isMQ;
+    protected final Object locker = new Object();
 
     // log uncaught exceptions
     Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
@@ -720,6 +721,14 @@ public class ParallelWrapper implements AutoCloseable {
                         this.replicatedModel = new MultiLayerNetwork(conf);
 
                         ((MultiLayerNetwork) replicatedModel).init();
+
+                        synchronized (locker) {
+                            ((MultiLayerNetwork) replicatedModel).setParams(originalModel.params());
+
+                            if (Nd4j.getExecutioner() instanceof GridExecutioner)
+                                ((GridExecutioner) Nd4j.getExecutioner()).flushQueueBlocking();
+                        }
+
                         Collection<IterationListener> oldListeners = ((MultiLayerNetwork) originalModel).getListeners();
                         oldListeners = (oldListeners == null ? new ArrayList<>() : new ArrayList<>(oldListeners));
                         Collection<IterationListener> replicatedListeners = new ArrayList<>();
@@ -736,8 +745,15 @@ public class ParallelWrapper implements AutoCloseable {
                     if (!onRootModel) {
                         this.replicatedModel = new ComputationGraph(ComputationGraphConfiguration.fromJson(((ComputationGraph) originalModel).getConfiguration().toJson()));
 
-
                         ((ComputationGraph) this.replicatedModel).init();
+
+                        synchronized (locker) {
+                            ((ComputationGraph) replicatedModel).setParams(originalModel.params());
+
+                            if (Nd4j.getExecutioner() instanceof GridExecutioner)
+                                ((GridExecutioner) Nd4j.getExecutioner()).flushQueueBlocking();
+                        }
+
                         Collection<IterationListener> oldListeners = ((ComputationGraph) originalModel).getListeners();
                         oldListeners = (oldListeners == null ? new ArrayList<>() : new ArrayList<>(oldListeners));
                         Collection<IterationListener> replicatedListeners = new ArrayList<>();
