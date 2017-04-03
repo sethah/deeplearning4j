@@ -742,6 +742,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
                 .initialSize(0)
                 .overallocationLimit(0.3)
                 .policyReset(ResetPolicy.BLOCK_LEFT)
+                .cyclesBeforeInitialization(layerNum)
                 .policyLearning(LearningPolicy.OVER_TIME)
                 .build();
 
@@ -1060,6 +1061,8 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
                 tl.onEpochEnd(this);
             }
         }
+
+        clearLayersStates();
     }
 
     /** Calculate and set gradients for MultiLayerNetwork, based on OutputLayer and labels*/
@@ -1514,6 +1517,8 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
                 clearLayerMaskArrays();
             }
         }
+
+        clearLayersStates();
     }
 
     /**
@@ -1569,6 +1574,8 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
                 if (hasMaskArrays)
                     clearLayerMaskArrays();
             }
+
+        clearLayersStates();
     }
 
     /**
@@ -1647,7 +1654,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
      * [0.5, 0.5] or some other probability distribution summing to one
      */
     public INDArray output(INDArray input) {
-        return output(input, TrainingMode.TEST);
+        return output(input, TrainingMode.TEST).detach();
     }
 
     /**
@@ -2678,6 +2685,15 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
         ret += StringUtils.repeat("=", 140);
         ret += "\n";
         return ret;
+    }
+
+    /**
+     * This method just makes sure there's no state preserved within layers
+     */
+    protected void clearLayersStates() {
+        for(int f = 0; f < layers.length; f++) {
+            layers[f].setInput(null);
+        }
     }
 
 }
