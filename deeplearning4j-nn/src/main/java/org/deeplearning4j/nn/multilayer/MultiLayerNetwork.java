@@ -982,12 +982,13 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
         } else {
             iter = iterator;
         }
+        DataSetIterator iter = (iterator.asyncSupported())
+                ? new AsyncDataSetIterator(iterator, 2)
+                : iterator;
 
-        if (trainingListeners.size() > 0) {
-            for (TrainingListener tl : trainingListeners) {
+        for (TrainingListener tl : trainingListeners) {
                 tl.onEpochStart(this);
             }
-        }
 
         if (layerWiseConfigurations.isPretrain()) {
             // TODO: pratrain should be wrapped into workspace
@@ -2520,10 +2521,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
      * @return
      */
     public RegressionEvaluation evaluateRegression(DataSetIterator iterator) {
-        RegressionEvaluation e = new RegressionEvaluation(iterator.totalOutcomes());
-        doEvaluation(iterator, e);
-
-        return e;
+        return doEvaluation(iterator, new RegressionEvaluation(iterator.totalOutcomes()));
     }
 
     /**
@@ -2534,9 +2532,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
      * @return ROC evaluation on the given dataset
      */
     public ROC evaluateROC(DataSetIterator iterator, int rocThresholdSteps) {
-        ROC roc = new ROC(rocThresholdSteps);
-        doEvaluation(iterator, roc);
-        return roc;
+        return doEvaluation(iterator, new ROC(rocThresholdSteps));
     }
 
     /**
@@ -2547,9 +2543,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
      * @return Multi-class ROC evaluation on the given dataset
      */
     public ROCMultiClass evaluateROCMultiClass(DataSetIterator iterator, int rocThresholdSteps) {
-        ROCMultiClass roc = new ROCMultiClass(rocThresholdSteps);
-        doEvaluation(iterator, roc);
-        return roc;
+        return doEvaluation(iterator, new ROCMultiClass(rocThresholdSteps));
     }
 
     /**
@@ -2558,7 +2552,7 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
      * @param iterator   data to evaluate on
      * @param evaluation IEvaluation instance to perform evaluation with
      */
-    public void doEvaluation(DataSetIterator iterator, IEvaluation evaluation) {
+    public <T extends IEvaluation> T doEvaluation(DataSetIterator iterator, T evaluation) {
         if (!iterator.hasNext() && iterator.resetSupported()) {
             iterator.reset();
         }
@@ -2571,25 +2565,20 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
 
             INDArray features = next.getFeatures();
             INDArray labels = next.getLabels();
+            INDArray lMask = next.getLabelsMaskArray();
 
             INDArray out;
             if (next.hasMaskArrays()) {
                 INDArray fMask = next.getFeaturesMaskArray();
-                INDArray lMask = next.getLabelsMaskArray();
                 out = this.output(features, false, fMask, lMask);
-
-                //Assume this is time series data. Not much point having a mask array for non TS data
-                evaluation.evalTimeSeries(labels, out, lMask);
             } else {
                 out = this.output(features, false);
-                if (labels.rank() == 3)
-                    evaluation.evalTimeSeries(labels, out, null);
-                else {
-                    List<Serializable> meta = next.getExampleMetaData();
-                    evaluation.eval(labels, out, meta);
-                }
             }
+
+            evaluation.eval(labels, out, lMask);
         }
+
+        return evaluation;
     }
 
     /**

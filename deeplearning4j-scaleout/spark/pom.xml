@@ -33,6 +33,7 @@
         <module>dl4j-spark-nlp</module>
         <module>dl4j-spark-parameterserver</module>
         <module>dl4j-spark-nlp-java8</module>
+        <module>dl4j-spark-ml</module>
     </modules>
 
     <properties>
@@ -54,7 +55,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.12</version>
+                <version>${maven-build-helper-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>add-source</id>

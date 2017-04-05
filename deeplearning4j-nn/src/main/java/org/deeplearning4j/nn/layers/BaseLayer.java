@@ -80,6 +80,14 @@ public abstract class BaseLayer<LayerConfT extends org.deeplearning4j.nn.conf.la
         return input;
     }
 
+    /**
+     * Init the model
+     */
+    @Override
+    public void init() {
+
+    }
+
     @Override
     public void setInput(INDArray input) {
         this.input = input;
@@ -151,7 +159,7 @@ public abstract class BaseLayer<LayerConfT extends org.deeplearning4j.nn.conf.la
         INDArray delta = conf().getLayer().getActivationFn().backprop(z, epsilon).getFirst(); //TODO handle activation function params
 
         if (maskArray != null) {
-            delta.muliColumnVector(maskArray);
+            applyMask(delta);
         }
 
         Gradient ret = new DefaultGradient();
@@ -264,7 +272,7 @@ public abstract class BaseLayer<LayerConfT extends org.deeplearning4j.nn.conf.la
      */
     @Override
     public INDArray params() {
-        return Nd4j.toFlattened('f', params.values());
+        return paramsFlattened;
     }
 
     @Override
@@ -396,7 +404,7 @@ public abstract class BaseLayer<LayerConfT extends org.deeplearning4j.nn.conf.la
         INDArray ret = conf().getLayer().getActivationFn().getActivation(z, training);
 
         if (maskArray != null) {
-            ret.muliColumnVector(maskArray);
+            applyMask(ret);
         }
 
         return ret;
