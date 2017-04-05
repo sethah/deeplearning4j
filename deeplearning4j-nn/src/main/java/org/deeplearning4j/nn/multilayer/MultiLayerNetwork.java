@@ -975,15 +975,10 @@ public class MultiLayerNetwork implements Serializable, Classifier, Layer {
 
     @Override
     public void fit(DataSetIterator iterator) {
-        DataSetIterator iter;
+
         // we're wrapping all iterators into AsyncDataSetIterator to provide background prefetch - where appropriate
-        if (iterator.asyncSupported()) {
-            iter = new AsyncDataSetIterator(iterator, Math.max(Nd4j.getAffinityManager().getNumberOfDevices() * 2, 4), layerWiseConfigurations.getWorkspaceMode() != WorkspaceMode.NONE);
-        } else {
-            iter = iterator;
-        }
         DataSetIterator iter = (iterator.asyncSupported())
-                ? new AsyncDataSetIterator(iterator, 2)
+                ? new AsyncDataSetIterator(iterator, Math.max(Nd4j.getAffinityManager().getNumberOfDevices() * 2, 4), layerWiseConfigurations.getWorkspaceMode() != WorkspaceMode.NONE)
                 : iterator;
 
         for (TrainingListener tl : trainingListeners) {
